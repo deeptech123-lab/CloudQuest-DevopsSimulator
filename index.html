@@ -1,0 +1,1052 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AWS Cloud Quest: DevOps Simulator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['Fira Code', 'monospace'],
+                    },
+                    colors: {
+                        aws: {
+                            orange: '#FF9900',
+                            navy: '#232F3E',
+                            light: '#F2F3F3',
+                            blue: '#007EBC',
+                            hover: '#131A22'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #f8fafc;
+            color: #334155;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        .pillar-card {
+            transition: all 0.2s ease-in-out;
+        }
+
+        .pillar-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+
+        .pillar-selected {
+            border-color: #FF9900;
+            background-color: #fffaf0;
+        }
+
+        .terminal-container {
+            background-color: #1e1e1e;
+            color: #d4d4d4;
+            font-family: 'Fira Code', monospace;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            height: 300px;
+            overflow-y: auto;
+            box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.06);
+        }
+
+        .terminal-input-line {
+            display: flex;
+            align-items: center;
+        }
+
+        .terminal-prompt {
+            color: #10b981; /* green */
+            margin-right: 0.5rem;
+        }
+
+        .terminal-cursor {
+            display: inline-block;
+            width: 8px;
+            height: 1.2em;
+            background-color: #d4d4d4;
+            animation: blink 1s step-end infinite;
+            vertical-align: middle;
+            margin-left: 2px;
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0; }
+        }
+
+        /* Custom scrollbar for terminal */
+        .terminal-container::-webkit-scrollbar {
+            width: 8px;
+        }
+        .terminal-container::-webkit-scrollbar-track {
+            background: #1e1e1e;
+        }
+        .terminal-container::-webkit-scrollbar-thumb {
+            background: #555;
+            border-radius: 4px;
+        }
+        .terminal-container::-webkit-scrollbar-thumb:hover {
+            background: #888;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 0.25em 0.4em;
+            font-size: 75%;
+            font-weight: 700;
+            line-height: 1;
+            text-align: center;
+            white-space: nowrap;
+            vertical-align: baseline;
+            border-radius: 0.25rem;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 flex flex-col h-screen overflow-hidden">
+    <!-- Header -->
+    <header class="bg-aws-navy text-white p-4 shadow-md z-10 flex justify-between items-center">
+        <div class="flex items-center gap-3">
+            <i class="fa-brands fa-aws text-aws-orange text-3xl"></i>
+            <h1 class="text-xl font-bold tracking-tight">Cloud Quest: DevOps Simulator</h1>
+        </div>
+        <div class="flex items-center gap-4 text-sm font-medium">
+            <div id="progress-indicator" class="flex gap-2">
+                <span class="px-3 py-1 rounded-full bg-aws-orange text-aws-navy text-xs md:text-sm" id="nav-step-1"><i class="fas fa-list-check mr-1"></i> Reqs</span>
+                <span class="px-3 py-1 rounded-full bg-gray-700 text-gray-300 text-xs md:text-sm hidden md:inline-block" id="nav-step-2"><i class="fas fa-sync mr-1"></i> SDLC</span>
+                <span class="px-3 py-1 rounded-full bg-gray-700 text-gray-300 text-xs md:text-sm" id="nav-step-3"><i class="fas fa-sitemap mr-1"></i> Arch</span>
+                <span class="px-3 py-1 rounded-full bg-gray-700 text-gray-300 text-xs md:text-sm" id="nav-step-4"><i class="fas fa-terminal mr-1"></i> Deploy</span>
+            </div>
+            <div class="border-l border-gray-600 pl-4">
+                Score: <span id="score-display" class="text-aws-orange font-bold text-lg">0</span> / 400
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="flex-1 overflow-y-auto p-6 relative">
+        
+        <section id="phase1" class="max-w-4xl mx-auto flex flex-col h-full fade-in">
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 flex-1 flex flex-col">
+                <div class="mb-4 pb-4 border-b border-gray-100 flex items-center justify-between">
+                    <div>
+                        <h2 class="text-2xl font-bold text-gray-800"><i class="fas fa-comments text-blue-500 mr-2"></i> Mission Briefing</h2>
+                        <p class="text-gray-500 text-sm mt-1">Project: "GlobalMart E-commerce Platform"</p>
+                    </div>
+                    <span class="bg-blue-100 text-blue-800 text-xs font-semibold px-2.5 py-0.5 rounded border border-blue-400">Phase 1 of 3</span>
+                </div>
+                
+                <div class="flex-1 overflow-y-auto bg-gray-50 rounded p-4 mb-4" id="chat-container">
+                    <div class="flex items-start mb-4">
+                        <div class="flex-shrink-0 mr-3">
+                            <div class="bg-aws-navy rounded-full h-10 w-10 flex items-center justify-center text-white font-bold">CTO</div>
+                        </div>
+                        <div class="bg-white p-3 rounded-lg rounded-tl-none shadow-sm border border-gray-200 max-w-[80%]">
+                            <p class="text-sm text-gray-800">Welcome to the team, Engineer. We are launching "GlobalMart", a new e-commerce application. We expect traffic to be highly variable—quiet at night, but massive spikes during sales events.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-start mb-4 hidden" id="msg-2">
+                        <div class="flex-shrink-0 mr-3">
+                            <div class="bg-aws-navy rounded-full h-10 w-10 flex items-center justify-center text-white font-bold">CTO</div>
+                        </div>
+                        <div class="bg-white p-3 rounded-lg rounded-tl-none shadow-sm border border-gray-200 max-w-[80%]">
+                            <p class="text-sm text-gray-800">Furthermore, user data security is paramount. We must encrypt data at rest and in transit. If a database goes down in one region, the app must stay online.</p>
+                        </div>
+                    </div>
+
+                    <div class="flex items-start mb-4 hidden" id="msg-3">
+                        <div class="flex-shrink-0 mr-3">
+                            <div class="bg-aws-navy rounded-full h-10 w-10 flex items-center justify-center text-white font-bold">CTO</div>
+                        </div>
+                        <div class="bg-white p-3 rounded-lg rounded-tl-none shadow-sm border border-gray-200 max-w-[80%]">
+                            <p class="text-sm text-gray-800">Finally, we need to deploy updates daily without downtime. And keep costs down—don't pay for servers when no one is shopping.</p>
+                        </div>
+                    </div>
+
+                    <div class="flex items-start mb-4 hidden" id="msg-4">
+                        <div class="flex-shrink-0 mr-3">
+                            <div class="bg-aws-navy rounded-full h-10 w-10 flex items-center justify-center text-white font-bold">CTO</div>
+                        </div>
+                        <div class="bg-white p-3 rounded-lg rounded-tl-none shadow-sm border border-gray-200 max-w-[80%]">
+                            <p class="text-sm text-gray-800">Oh, and one more thing. I need you to map out how our AWS tools integrate into our Software Development Life Cycle (SDLC) before we start architecting. Also, we must proactively track and optimize our cloud spend. Can you extract the key requirements?</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="requirements-extraction" class="hidden border-t pt-4">
+                    <h3 class="font-semibold text-gray-700 mb-3">Identify Key Requirements (Select 4):</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3" id="req-options">
+                        <!-- Options generated by JS -->
+                    </div>
+                    <div class="mt-4 flex justify-end">
+                        <button id="btn-submit-reqs" class="bg-aws-orange hover:bg-orange-600 text-white font-bold py-2 px-6 rounded shadow opacity-50 cursor-not-allowed transition-colors" disabled>Analyze Requirements</button>
+                    </div>
+                </div>
+
+                <div id="phase1-controls" class="flex justify-center pt-2">
+                    <button id="btn-next-msg" class="bg-aws-navy hover:bg-aws-hover text-white font-medium py-2 px-6 rounded shadow transition-colors">Continue Briefing...</button>
+                </div>
+            </div>
+        </section>
+
+        <section id="phase2" class="max-w-5xl mx-auto h-full hidden flex-col fade-in">
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 flex-1 flex flex-col">
+                <div class="mb-4 pb-4 border-b border-gray-100 flex items-center justify-between">
+                    <div>
+                        <h2 class="text-2xl font-bold text-gray-800"><i class="fas fa-sync text-indigo-500 mr-2"></i> SDLC & DevOps Integration</h2>
+                        <p class="text-gray-500 text-sm mt-1">Map AWS services to the appropriate Software Development Life Cycle stages.</p>
+                    </div>
+                    <span class="bg-indigo-100 text-indigo-800 text-xs font-semibold px-2.5 py-0.5 rounded border border-indigo-400">Phase 2 of 4</span>
+                </div>
+
+                <div class="flex flex-col md:flex-row gap-6 flex-1">
+                    <div class="w-full md:w-1/3 flex flex-col gap-3" id="sdlc-tools">
+                        <h3 class="font-semibold text-gray-700">AWS DevOps Tools</h3>
+                        <div class="bg-gray-50 p-3 rounded border text-sm cursor-pointer hover:bg-indigo-50 border-gray-300 transition-colors shadow-sm tool-item" onclick="selectSdlcTool('codecommit', this)" id="tool-codecommit">AWS CodeCommit (Source Control)</div>
+                        <div class="bg-gray-50 p-3 rounded border text-sm cursor-pointer hover:bg-indigo-50 border-gray-300 transition-colors shadow-sm tool-item" onclick="selectSdlcTool('codebuild', this)" id="tool-codebuild">AWS CodeBuild (Build & Test)</div>
+                        <div class="bg-gray-50 p-3 rounded border text-sm cursor-pointer hover:bg-indigo-50 border-gray-300 transition-colors shadow-sm tool-item" onclick="selectSdlcTool('codedeploy', this)" id="tool-codedeploy">AWS CodeDeploy (Deployment)</div>
+                        <div class="bg-gray-50 p-3 rounded border text-sm cursor-pointer hover:bg-indigo-50 border-gray-300 transition-colors shadow-sm tool-item" onclick="selectSdlcTool('cloudwatch', this)" id="tool-cloudwatch">Amazon CloudWatch (Monitoring)</div>
+                    </div>
+                    
+                    <div class="w-full md:w-2/3 flex flex-col gap-4">
+                        <h3 class="font-semibold text-gray-700">SDLC Stages</h3>
+                        <div class="grid grid-cols-2 gap-4" id="sdlc-stages">
+                            <div class="border-2 border-dashed border-gray-300 rounded p-4 flex flex-col items-center justify-center min-h-[100px] cursor-pointer hover:border-indigo-400 bg-white sdlc-stage" onclick="mapToolToStage('source', this)" id="stage-source">
+                                <span class="font-bold text-gray-600 mb-2 text-center">1. Source / Plan</span>
+                            </div>
+                            <div class="border-2 border-dashed border-gray-300 rounded p-4 flex flex-col items-center justify-center min-h-[100px] cursor-pointer hover:border-indigo-400 bg-white sdlc-stage" onclick="mapToolToStage('build', this)" id="stage-build">
+                                <span class="font-bold text-gray-600 mb-2 text-center">2. Build / Test</span>
+                            </div>
+                            <div class="border-2 border-dashed border-gray-300 rounded p-4 flex flex-col items-center justify-center min-h-[100px] cursor-pointer hover:border-indigo-400 bg-white sdlc-stage" onclick="mapToolToStage('deploy', this)" id="stage-deploy">
+                                <span class="font-bold text-gray-600 mb-2 text-center">3. Deploy / Release</span>
+                            </div>
+                            <div class="border-2 border-dashed border-gray-300 rounded p-4 flex flex-col items-center justify-center min-h-[100px] cursor-pointer hover:border-indigo-400 bg-white sdlc-stage" onclick="mapToolToStage('monitor', this)" id="stage-monitor">
+                                <span class="font-bold text-gray-600 mb-2 text-center">4. Operate / Monitor</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-4 flex justify-between items-center pt-4 border-t">
+                    <div class="text-sm text-gray-600" id="sdlc-progress-text">Mappings: 0/4 completed</div>
+                    <button id="btn-proceed-arch" class="bg-aws-orange hover:bg-orange-600 text-white font-bold py-2 px-6 rounded shadow hidden transition-colors">Proceed to Architecture <i class="fas fa-arrow-right ml-2"></i></button>
+                </div>
+            </div>
+        </section>
+
+        <section id="phase3" class="max-w-6xl mx-auto h-full hidden flex-col fade-in">
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 flex-1 flex flex-col">
+                <div class="mb-4 pb-4 border-b border-gray-100 flex items-center justify-between">
+                    <div>
+                        <h2 class="text-2xl font-bold text-gray-800"><i class="fas fa-compass-drafting text-purple-500 mr-2"></i> Architecture Design Board</h2>
+                        <p class="text-gray-500 text-sm mt-1">Map requirements to AWS Well-Architected Framework Pillars & Services</p>
+                    </div>
+                    <span class="bg-purple-100 text-purple-800 text-xs font-semibold px-2.5 py-0.5 rounded border border-purple-400">Phase 3 of 4</span>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 flex-1 overflow-hidden">
+                    <!-- Left Col: Requirements to Map -->
+                    <div class="col-span-1 flex flex-col border border-gray-200 rounded bg-gray-50 overflow-hidden">
+                        <div class="bg-gray-200 p-3 font-semibold text-gray-700 text-sm border-b">Active Requirements</div>
+                        <div class="p-3 overflow-y-auto flex-1 space-y-3" id="mapping-tasks">
+                            <!-- Tasks populated via JS -->
+                        </div>
+                    </div>
+
+                    <!-- Right Col: The 6 Pillars Board -->
+                    <div class="col-span-2 flex flex-col border border-gray-200 rounded overflow-hidden">
+                        <div class="bg-gray-100 p-3 font-semibold text-gray-700 text-sm border-b flex justify-between items-center">
+                            <span>AWS Well-Architected Framework</span>
+                            <a href="#" class="text-xs text-blue-600 hover:underline" onclick="showFrameworkHint(); return false;"><i class="fas fa-circle-info"></i> Guide</a>
+                        </div>
+                        <div class="p-4 grid grid-cols-2 md:grid-cols-3 gap-4 overflow-y-auto flex-1 bg-white" id="pillars-board">
+                            <!-- Pillars populated via JS -->
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Service Selection Modal area (inline) -->
+                <div id="service-selection-area" class="mt-4 border border-blue-200 bg-blue-50 p-4 rounded hidden">
+                    <h4 class="font-semibold text-blue-800 mb-2" id="service-prompt-title">Select appropriate AWS Service</h4>
+                    <p class="text-sm text-blue-600 mb-3" id="service-prompt-desc"></p>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-3" id="service-options">
+                        <!-- Populated via JS -->
+                    </div>
+                </div>
+
+                <div class="mt-4 flex justify-between items-center pt-4 border-t">
+                    <div class="text-sm text-gray-600" id="arch-progress-text">Mappings: 0/4 completed</div>
+                    <button id="btn-proceed-deployment" class="bg-aws-orange hover:bg-orange-600 text-white font-bold py-2 px-6 rounded shadow hidden transition-colors">Proceed to Deployment <i class="fas fa-arrow-right ml-2"></i></button>
+                </div>
+            </div>
+        </section>
+
+        <section id="phase4" class="max-w-5xl mx-auto h-full hidden flex-col fade-in">
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 flex-1 flex flex-col">
+                 <div class="mb-4 pb-4 border-b border-gray-100 flex items-center justify-between">
+                    <div>
+                        <h2 class="text-2xl font-bold text-gray-800"><i class="fas fa-rocket text-green-500 mr-2"></i> Provision & Deploy</h2>
+                        <p class="text-gray-500 text-sm mt-1">Use Infrastructure as Code (CloudFormation/Terraform) to build the environment.</p>
+                    </div>
+                    <span class="bg-green-100 text-green-800 text-xs font-semibold px-2.5 py-0.5 rounded border border-green-400">Phase 4 of 4</span>
+                </div>
+
+                <div class="flex gap-6 h-full">
+                    <!-- Instructions -->
+                    <div class="w-1/3 flex flex-col space-y-4">
+                        <div class="bg-gray-50 border p-4 rounded text-sm">
+                            <h3 class="font-bold text-gray-700 mb-2"><i class="fas fa-list-ol mr-2"></i> Tasks</h3>
+                            <ul class="space-y-3" id="deployment-tasks">
+                                <li class="flex items-start text-gray-600">
+                                    <i class="far fa-circle text-gray-400 mt-1 mr-2 w-4"></i>
+                                    <span>Define VPC & Security Groups (IaC)</span>
+                                </li>
+                                <li class="flex items-start text-gray-600">
+                                    <i class="far fa-circle text-gray-400 mt-1 mr-2 w-4"></i>
+                                    <span>Provision Auto Scaling Group</span>
+                                </li>
+                                <li class="flex items-start text-gray-600">
+                                    <i class="far fa-circle text-gray-400 mt-1 mr-2 w-4"></i>
+                                    <span>Configure CI/CD Pipeline</span>
+                                </li>
+                                <li class="flex items-start text-gray-600">
+                                    <i class="far fa-circle text-gray-400 mt-1 mr-2 w-4"></i>
+                                    <span>Setup AWS Budgets (Cost Optimization)</span>
+                                </li>
+                            </ul>
+                        </div>
+
+                        <div class="bg-blue-50 border border-blue-200 p-4 rounded">
+                            <h4 class="font-semibold text-blue-800 text-sm mb-2">Available Commands</h4>
+                            <div class="flex flex-wrap gap-2 text-xs" id="cmd-options">
+                                <!-- Populated by JS -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Terminal -->
+                    <div class="w-2/3 flex flex-col">
+                        <div class="bg-gray-800 rounded-t px-4 py-2 flex items-center justify-between border-b border-gray-700">
+                            <div class="flex space-x-2">
+                                <div class="w-3 h-3 rounded-full bg-red-500"></div>
+                                <div class="w-3 h-3 rounded-full bg-yellow-500"></div>
+                                <div class="w-3 h-3 rounded-full bg-green-500"></div>
+                            </div>
+                            <div class="text-gray-400 text-xs font-mono">aws-cli ~ deploy.sh</div>
+                        </div>
+                        <div class="terminal-container flex-1 rounded-b" id="terminal-output">
+                            <div class="text-gray-400 mb-2">AWS CloudShell Simulator v1.0.0</div>
+                            <div class="text-gray-400 mb-4">Type commands or select them from the left panel.</div>
+                            <!-- Terminal history will go here -->
+                            <div class="terminal-input-line" id="active-terminal-line">
+                                <span class="terminal-prompt">devops@aws:~$</span>
+                                <span id="current-typing" class="text-white"></span>
+                                <span class="terminal-cursor"></span>
+                            </div>
+                        </div>
+                        <div class="mt-4 flex justify-end">
+                            <button id="btn-finish" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-6 rounded shadow hidden transition-colors">Complete Mission <i class="fas fa-trophy ml-2"></i></button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Hint Modal -->
+        <div id="modal-hint" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center p-4">
+            <div class="bg-white rounded-lg max-w-2xl w-full shadow-2xl p-6 border-t-4 border-aws-orange">
+                <div class="flex justify-between items-center mb-4 border-b pb-2">
+                    <h3 class="text-xl font-bold text-gray-800"><i class="fas fa-book text-aws-orange mr-2"></i> The 6 Pillars Explained</h3>
+                    <button onclick="closeModal('modal-hint')" class="text-gray-500 hover:text-gray-800"><i class="fas fa-times"></i></button>
+                </div>
+                <div class="grid grid-cols-2 gap-4 text-sm max-h-[60vh] overflow-y-auto pr-2">
+                    <div class="bg-gray-50 p-3 rounded border">
+                        <h4 class="font-bold text-blue-700"><i class="fas fa-cogs mr-1"></i> Operational Excellence</h4>
+                        <p class="text-gray-600 mt-1">Run and monitor systems to deliver business value, continually improving processes (IaC, CI/CD, Monitoring).</p>
+                    </div>
+                    <div class="bg-gray-50 p-3 rounded border">
+                        <h4 class="font-bold text-red-700"><i class="fas fa-shield-halved mr-1"></i> Security</h4>
+                        <p class="text-gray-600 mt-1">Protect data, systems, and assets. Use IAM, encryption, and automated threat detection.</p>
+                    </div>
+                    <div class="bg-gray-50 p-3 rounded border">
+                        <h4 class="font-bold text-green-700"><i class="fas fa-server mr-1"></i> Reliability</h4>
+                        <p class="text-gray-600 mt-1">Recover from disruptions, dynamically acquire computing resources (Multi-AZ, Auto Scaling).</p>
+                    </div>
+                    <div class="bg-gray-50 p-3 rounded border">
+                        <h4 class="font-bold text-purple-700"><i class="fas fa-gauge-high mr-1"></i> Performance Efficiency</h4>
+                        <p class="text-gray-600 mt-1">Use computing resources efficiently to meet system requirements (Serverless, Right-sizing).</p>
+                    </div>
+                    <div class="bg-gray-50 p-3 rounded border">
+                        <h4 class="font-bold text-yellow-600"><i class="fas fa-coins mr-1"></i> Cost Optimization</h4>
+                        <p class="text-gray-600 mt-1">Avoid unnecessary costs. Pay only for what you need (Auto Scaling, Spot instances).</p>
+                    </div>
+                    <div class="bg-gray-50 p-3 rounded border">
+                        <h4 class="font-bold text-emerald-600"><i class="fas fa-leaf mr-1"></i> Sustainability</h4>
+                        <p class="text-gray-600 mt-1">Minimize environmental impacts of running cloud workloads (Max utilization, managed services).</p>
+                    </div>
+                </div>
+                <div class="mt-6 text-center">
+                    <button onclick="closeModal('modal-hint')" class="bg-gray-800 text-white px-6 py-2 rounded hover:bg-gray-700 transition">Got it</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Result Modal -->
+        <div id="modal-result" class="fixed inset-0 bg-black bg-opacity-75 z-50 hidden flex items-center justify-center p-4 backdrop-blur-sm">
+            <div class="bg-white rounded-lg max-w-lg w-full shadow-2xl p-8 text-center relative overflow-hidden">
+                <div class="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-aws-orange via-yellow-400 to-green-500"></div>
+                <i class="fas fa-award text-6xl text-aws-orange mb-4"></i>
+                <h2 class="text-3xl font-bold text-gray-800 mb-2">Mission Accomplished!</h2>
+                <p class="text-gray-600 mb-6">You have successfully architected and deployed GlobalMart using AWS best practices.</p>
+                
+                <div class="bg-gray-100 rounded-lg p-4 mb-6">
+                    <div class="text-sm text-gray-500 uppercase font-semibold tracking-wide">Final Score</div>
+                    <div class="text-5xl font-bold text-aws-navy" id="final-score">400</div>
+                    <div class="text-sm text-green-600 font-medium mt-2"><i class="fas fa-check-circle"></i> AWS Certified DevOps Pro Level</div>
+                </div>
+                
+                <button onclick="location.reload()" class="bg-aws-navy hover:bg-aws-hover text-white font-bold py-3 px-8 rounded-full shadow-lg transition-transform transform hover:scale-105 w-full">Play Again</button>
+            </div>
+        </div>
+
+        <!-- Notification Toast -->
+        <div id="toast" class="fixed bottom-4 right-4 bg-gray-800 text-white px-4 py-3 rounded shadow-lg transform transition-transform duration-300 translate-y-20 opacity-0 z-50 flex items-center">
+            <i id="toast-icon" class="fas fa-info-circle mr-3"></i>
+            <span id="toast-msg">Notification message</span>
+        </div>
+
+    </main>
+
+    <script>
+        // --- State Management ---
+        const state = {
+            score: 0,
+            phase: 1,
+            phase1MsgStep: 1,
+            selectedReqs: new Set(),
+            sdlcActiveTool: null,
+            sdlcMappings: 0,
+            mappedRequirements: 0,
+            activeMappingTask: null,
+            deploymentStep: 0
+        };
+
+        // --- Data Definitions ---
+        const requirementsOptions = [
+            { id: 'req_scale', text: 'Handle variable traffic spikes', isCorrect: true, mapping: { pillar: 'reliability', service: 'autoscaling' } },
+            { id: 'req_office', text: 'Provide free coffee in office', isCorrect: false },
+            { id: 'req_sec', text: 'Encrypt user data & survive DB failures', isCorrect: true, mapping: { pillar: 'security', service: 'rds-multi-az' } },
+            { id: 'req_deploy', text: 'Daily zero-downtime deployments', isCorrect: true, mapping: { pillar: 'operational', service: 'cicd' } },
+            { id: 'req_logo', text: 'Change website logo to blue', isCorrect: false },
+            { id: 'req_cost', text: 'Proactively track and minimize cloud spend', isCorrect: true, mapping: { pillar: 'cost', service: 'budgets' } } 
+        ];
+
+        const coreTasks = [
+            { id: 'req_scale', desc: 'Handle variable traffic spikes efficiently', solved: false, expectedPillar: 'performance', altPillar: 'reliability' },
+            { id: 'req_sec', desc: 'Encrypt data & survive DB failures', solved: false, expectedPillar: 'security' },
+            { id: 'req_deploy', desc: 'Automate daily zero-downtime deployments', solved: false, expectedPillar: 'operational' },
+            { id: 'req_cost', desc: 'Proactively track and minimize cloud spend', solved: false, expectedPillar: 'cost' }
+        ];
+
+        const sdlcCorrectMappings = {
+            'codecommit': 'source',
+            'codebuild': 'build',
+            'codedeploy': 'deploy',
+            'cloudwatch': 'monitor'
+        };
+
+        const pillars = [
+            { id: 'operational', name: 'Operational Excellence', icon: 'fa-cogs', color: 'blue' },
+            { id: 'security', name: 'Security', icon: 'fa-shield-halved', color: 'red' },
+            { id: 'reliability', name: 'Reliability', icon: 'fa-server', color: 'green' },
+            { id: 'performance', name: 'Performance Efficiency', icon: 'fa-gauge-high', color: 'purple' },
+            { id: 'cost', name: 'Cost Optimization', icon: 'fa-coins', color: 'yellow' },
+            { id: 'sustainability', name: 'Sustainability', icon: 'fa-leaf', color: 'emerald' }
+        ];
+
+        const servicesMap = {
+            'operational': [
+                { id: 'cicd', name: 'AWS CodePipeline / CodeDeploy', desc: 'Automates building, testing, and deployment.', correctFor: 'req_deploy' },
+                { id: 'cloudwatch', name: 'Amazon CloudWatch', desc: 'Monitoring and observability.', correctFor: null }
+            ],
+            'security': [
+                { id: 'kms', name: 'AWS KMS', desc: 'Key management for encryption.', correctFor: null },
+                { id: 'rds-multi-az', name: 'Amazon RDS Multi-AZ + Encryption', desc: 'High availability DB with at-rest encryption.', correctFor: 'req_sec' }
+            ],
+            'performance': [
+                { id: 'autoscaling', name: 'Amazon EC2 Auto Scaling', desc: 'Automatically adjusts compute capacity based on load.', correctFor: 'req_scale' },
+                { id: 'elasticache', name: 'Amazon ElastiCache', desc: 'In-memory caching for speed.', correctFor: null }
+            ],
+            'reliability': [
+                { id: 'autoscaling', name: 'Amazon EC2 Auto Scaling', desc: 'Ensures enough instances are running.', correctFor: 'req_scale' },
+                { id: 'route53', name: 'Amazon Route 53', desc: 'Highly available DNS.', correctFor: null }
+            ],
+            'cost': [
+                { id: 'budgets', name: 'AWS Budgets & Cost Explorer', desc: 'Set custom budgets and track cloud spend.', correctFor: 'req_cost' },
+                { id: 'spot', name: 'Amazon EC2 Spot Instances', desc: 'Use spare compute capacity at steep discounts.', correctFor: null }
+            ]
+        };
+
+        const deploymentSteps = [
+            {
+                cmd: "aws cloudformation deploy --template-file vpc-sec.yaml --stack-name GlobalMart-Net",
+                desc: "Provisioning VPC, Subnets, and Security Groups based on Security pillar...",
+                time: 1500
+            },
+            {
+                cmd: "aws autoscaling create-auto-scaling-group --auto-scaling-group-name WebASG --min-size 2 --max-size 10",
+                desc: "Setting up EC2 Auto Scaling to handle variable traffic (Reliability/Performance)...",
+                time: 2000
+            },
+            {
+                cmd: "aws codepipeline create-pipeline --cli-input-json file://pipeline.json",
+                desc: "Establishing CI/CD pipeline for zero-downtime daily deployments (Operational Excellence)...",
+                time: 1800
+            },
+            {
+                cmd: "aws budgets create-budget --account-id 123456789012 --budget file://budget.json",
+                desc: "Configuring AWS Budgets alerts to monitor cost optimization...",
+                time: 1500
+            }
+        ];
+
+        // --- Utility Functions ---
+        function updateScore(points) {
+            state.score += points;
+            const scoreEl = document.getElementById('score-display');
+            scoreEl.innerText = state.score;
+            scoreEl.classList.add('scale-150', 'text-green-500');
+            setTimeout(() => {
+                scoreEl.classList.remove('scale-150', 'text-green-500');
+            }, 300);
+        }
+
+        function showToast(message, type = 'info') {
+            const toast = document.getElementById('toast');
+            const icon = document.getElementById('toast-icon');
+            document.getElementById('toast-msg').innerText = message;
+            
+            toast.className = `fixed bottom-4 right-4 text-white px-4 py-3 rounded shadow-lg transform transition-transform duration-300 z-50 flex items-center ${type === 'success' ? 'bg-green-600' : type === 'error' ? 'bg-red-600' : 'bg-blue-600'}`;
+            icon.className = `fas mr-3 ${type === 'success' ? 'fa-check-circle' : type === 'error' ? 'fa-exclamation-triangle' : 'fa-info-circle'}`;
+            
+            // Remove translate-y-20 and opacity-0, add translate-y-0 and opacity-100
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            
+            setTimeout(() => {
+                toast.classList.add('translate-y-20', 'opacity-0');
+            }, 3000);
+        }
+
+        function switchPhase(newPhase) {
+            document.getElementById(`phase${state.phase}`).classList.add('hidden');
+            document.getElementById(`nav-step-${state.phase}`).classList.replace('bg-aws-orange', 'bg-gray-700');
+            document.getElementById(`nav-step-${state.phase}`).classList.replace('text-aws-navy', 'text-gray-300');
+            
+            state.phase = newPhase;
+            
+            document.getElementById(`phase${state.phase}`).classList.remove('hidden');
+            document.getElementById(`nav-step-${state.phase}`).classList.replace('bg-gray-700', 'bg-aws-orange');
+            document.getElementById(`nav-step-${state.phase}`).classList.replace('text-gray-300', 'text-aws-navy');
+
+            if(newPhase === 3) initPhase3();
+            if(newPhase === 4) initPhase4();
+        }
+
+        function showFrameworkHint() {
+            document.getElementById('modal-hint').classList.remove('hidden');
+        }
+        function closeModal(id) {
+            document.getElementById(id).classList.add('hidden');
+        }
+
+        document.getElementById('btn-next-msg').addEventListener('click', () => {
+            state.phase1MsgStep++;
+            if (state.phase1MsgStep === 2) {
+                document.getElementById('msg-2').classList.remove('hidden');
+                document.getElementById('msg-2').classList.add('fade-in');
+            } else if (state.phase1MsgStep === 3) {
+                document.getElementById('msg-3').classList.remove('hidden');
+                document.getElementById('msg-3').classList.add('fade-in');
+            } else if (state.phase1MsgStep === 4) {
+                document.getElementById('msg-4').classList.remove('hidden');
+                document.getElementById('msg-4').classList.add('fade-in');
+                document.getElementById('phase1-controls').classList.add('hidden');
+                setTimeout(() => {
+                    initRequirementsSelection();
+                }, 800);
+            }
+            
+            // Scroll chat to bottom
+            const chatBox = document.getElementById('chat-container');
+            chatBox.scrollTop = chatBox.scrollHeight;
+        });
+
+        function initRequirementsSelection() {
+            const container = document.getElementById('requirements-extraction');
+            const optionsContainer = document.getElementById('req-options');
+            container.classList.remove('hidden');
+            container.classList.add('fade-in');
+
+            requirementsOptions.forEach(req => {
+                const div = document.createElement('div');
+                div.className = 'border-2 border-gray-200 rounded p-3 cursor-pointer hover:border-blue-400 hover:bg-blue-50 transition-colors flex items-center';
+                div.innerHTML = `<i class="far fa-square text-gray-400 mr-3 text-lg"></i> <span class="text-sm font-medium text-gray-700">${req.text}</span>`;
+                div.onclick = () => toggleRequirement(req.id, div);
+                optionsContainer.appendChild(div);
+            });
+        }
+
+        function toggleRequirement(id, el) {
+            const icon = el.querySelector('i');
+            if (state.selectedReqs.has(id)) {
+                state.selectedReqs.delete(id);
+                el.classList.remove('border-aws-orange', 'bg-orange-50');
+                el.classList.add('border-gray-200');
+                icon.classList.replace('fa-check-square', 'fa-square');
+                icon.classList.replace('text-aws-orange', 'text-gray-400');
+            } else {
+                if(state.selectedReqs.size >= 4) {
+                    showToast('You can only select 4 main requirements.', 'warning');
+                    return;
+                }
+                state.selectedReqs.add(id);
+                el.classList.remove('border-gray-200', 'hover:border-blue-400', 'hover:bg-blue-50');
+                el.classList.add('border-aws-orange', 'bg-orange-50');
+                icon.classList.replace('fa-square', 'fa-check-square');
+                icon.classList.replace('text-gray-400', 'text-aws-orange');
+            }
+
+            const btn = document.getElementById('btn-submit-reqs');
+            if (state.selectedReqs.size === 4) {
+                btn.classList.remove('opacity-50', 'cursor-not-allowed');
+                btn.disabled = false;
+            } else {
+                btn.classList.add('opacity-50', 'cursor-not-allowed');
+                btn.disabled = true;
+            }
+        }
+
+        document.getElementById('btn-submit-reqs').addEventListener('click', () => {
+            let correctCount = 0;
+            state.selectedReqs.forEach(id => {
+                const req = requirementsOptions.find(r => r.id === id);
+                if (req && req.isCorrect) correctCount++;
+            });
+
+            if (correctCount >= 4) {
+                updateScore(50);
+                showToast('Excellent! You identified the core requirements.', 'success');
+                setTimeout(() => switchPhase(2), 1500);
+            } else {
+                showToast('Review the CTO\'s messages carefully. Some selections are incorrect.', 'error');
+                updateScore(-10);
+            }
+        });
+
+        function selectSdlcTool(toolId, el) {
+            document.querySelectorAll('.tool-item').forEach(e => e.classList.remove('ring-2', 'ring-indigo-500', 'bg-indigo-100'));
+            
+            // If already mapped, don't allow selecting
+            if (el.classList.contains('mapped')) return;
+            
+            el.classList.add('ring-2', 'ring-indigo-500', 'bg-indigo-100');
+            state.sdlcActiveTool = { id: toolId, el: el, name: el.innerText };
+            showToast(`Selected ${el.innerText}. Now click the corresponding SDLC stage.`, 'info');
+        }
+
+        function mapToolToStage(stageId, el) {
+            if (!state.sdlcActiveTool) {
+                showToast('Please select an AWS tool from the left first.', 'warning');
+                return;
+            }
+
+            if (sdlcCorrectMappings[state.sdlcActiveTool.id] === stageId) {
+                updateScore(20);
+                showToast('Correct mapping!', 'success');
+                
+                // Visual updates
+                el.innerHTML = `
+                    <span class="font-bold text-gray-600 mb-1 text-sm">${el.querySelector('span').innerText}</span>
+                    <div class="bg-indigo-100 text-indigo-800 text-xs px-2 py-1 rounded w-full text-center border border-indigo-300 font-semibold">${state.sdlcActiveTool.name}</div>
+                `;
+                el.classList.remove('border-dashed', 'border-gray-300', 'cursor-pointer');
+                el.classList.add('border-solid', 'border-indigo-400', 'bg-indigo-50');
+                
+                state.sdlcActiveTool.el.classList.add('mapped', 'opacity-50', 'cursor-not-allowed');
+                state.sdlcActiveTool.el.classList.remove('ring-2', 'ring-indigo-500', 'bg-indigo-100');
+                
+                state.sdlcMappings++;
+                document.getElementById('sdlc-progress-text').innerText = `Mappings: ${state.sdlcMappings}/4 completed`;
+                
+                state.sdlcActiveTool = null;
+
+                if (state.sdlcMappings === 4) {
+                document.getElementById('btn-proceed-arch').classList.remove('hidden');
+                document.getElementById('btn-proceed-arch').classList.add('fade-in');
+            }
+        } else {
+            updateScore(-5);
+            showToast('Incorrect stage for this tool. Try again.', 'error');
+        }
+    }
+
+    document.getElementById('btn-proceed-arch').addEventListener('click', () => {
+        switchPhase(3);
+    });
+
+    function initPhase3() {
+        renderMappingTasks();
+        renderPillars();
+    }
+
+    function renderMappingTasks() {
+        const container = document.getElementById('mapping-tasks');
+        container.innerHTML = '';
+        coreTasks.forEach(task => {
+            const taskDiv = document.createElement('div');
+            taskDiv.id = `task-${task.id}`;
+            taskDiv.className = `p-3 rounded border transition-colors ${task.solved ? 'bg-green-50 border-green-200 opacity-70' : 'bg-white border-gray-200 cursor-pointer hover:border-aws-orange hover:bg-orange-50'}`;
+            taskDiv.innerHTML = `
+                <div class="flex items-start">
+                    <i id="icon-${task.id}" class="mt-1 mr-2 ${task.solved ? 'fas fa-check-circle text-green-500' : 'far fa-circle text-gray-300'}"></i>
+                    <span class="text-sm text-gray-700">${task.desc}</span>
+                </div>
+            `;
+            if (!task.solved) {
+                taskDiv.onclick = () => selectMappingTask(task, taskDiv);
+            }
+            container.appendChild(taskDiv);
+        });
+    }
+
+    function selectMappingTask(task, el) {
+        document.querySelectorAll('#mapping-tasks > div').forEach(div => {
+            if(!div.classList.contains('bg-green-50')) {
+                div.classList.remove('ring-2', 'ring-aws-orange', 'bg-orange-50');
+            }
+        });
+        el.classList.add('ring-2', 'ring-aws-orange', 'bg-orange-50');
+        state.activeMappingTask = task;
+        
+        document.getElementById('service-selection-area').classList.add('hidden');
+        showToast(`Selected task: "${task.desc}". Now choose the relevant Well-Architected Pillar.`, 'info');
+    }
+
+    function renderPillars() {
+        const container = document.getElementById('pillars-board');
+        container.innerHTML = '';
+        pillars.forEach(pillar => {
+            const pDiv = document.createElement('div');
+            
+            // Dynamic Tailwind classes for pillars
+            let hoverBg = 'hover:bg-gray-50';
+            let borderColor = 'border-gray-300 hover:border-gray-500';
+            let iconColor = 'text-gray-500';
+            
+            if (pillar.id === 'operational') { hoverBg = 'hover:bg-blue-50'; borderColor = 'border-blue-300 hover:border-blue-500'; iconColor = 'text-blue-500'; }
+            if (pillar.id === 'security') { hoverBg = 'hover:bg-red-50'; borderColor = 'border-red-300 hover:border-red-500'; iconColor = 'text-red-500'; }
+            if (pillar.id === 'reliability') { hoverBg = 'hover:bg-green-50'; borderColor = 'border-green-300 hover:border-green-500'; iconColor = 'text-green-500'; }
+            if (pillar.id === 'performance') { hoverBg = 'hover:bg-purple-50'; borderColor = 'border-purple-300 hover:border-purple-500'; iconColor = 'text-purple-500'; }
+            if (pillar.id === 'cost') { hoverBg = 'hover:bg-yellow-50'; borderColor = 'border-yellow-300 hover:border-yellow-500'; iconColor = 'text-yellow-500'; }
+            if (pillar.id === 'sustainability') { hoverBg = 'hover:bg-emerald-50'; borderColor = 'border-emerald-300 hover:border-emerald-500'; iconColor = 'text-emerald-500'; }
+
+            pDiv.className = `border-2 border-dashed ${borderColor} rounded p-4 flex flex-col items-center justify-center text-center cursor-pointer ${hoverBg} transition-colors min-h-[120px]`;
+            pDiv.innerHTML = `
+                <i class="fas ${pillar.icon} text-2xl ${iconColor} mb-2"></i>
+                <span class="font-semibold text-gray-700 text-sm">${pillar.name}</span>
+            `;
+            pDiv.onclick = () => handlePillarClick(pillar);
+            container.appendChild(pDiv);
+        });
+    }
+
+    function handlePillarClick(pillar) {
+        if (!state.activeMappingTask) {
+            showToast('Please select a requirement from the left first.', 'warning');
+            return;
+        }
+
+        const task = state.activeMappingTask;
+        
+        if (task.expectedPillar === pillar.id || task.altPillar === pillar.id) {
+            updateScore(15);
+            showToast(`Correct Pillar! Now select the right AWS Service for ${pillar.name}.`, 'success');
+            showServiceSelection(pillar, task);
+        } else {
+            updateScore(-5);
+            showToast(`Incorrect Pillar for this requirement. Try again.`, 'error');
+        }
+    }
+
+    function showServiceSelection(pillar, task) {
+        const area = document.getElementById('service-selection-area');
+        const optionsContainer = document.getElementById('service-options');
+        
+        document.getElementById('service-prompt-title').innerText = `${pillar.name}: Select AWS Service`;
+        document.getElementById('service-prompt-desc').innerText = `Which service best addresses: "${task.desc}"?`;
+        
+        optionsContainer.innerHTML = '';
+        
+        const relevantServices = servicesMap[pillar.id] || [];
+        
+        relevantServices.forEach(srv => {
+            const btn = document.createElement('button');
+            btn.className = 'bg-white border border-blue-300 hover:bg-blue-100 hover:border-blue-500 rounded p-3 text-left transition-colors flex flex-col h-full';
+            btn.innerHTML = `
+                <span class="font-bold text-blue-800 text-sm mb-1">${srv.name}</span>
+                <span class="text-xs text-gray-600 leading-tight flex-1">${srv.desc}</span>
+            `;
+            btn.onclick = () => handleServiceSelection(srv, pillar, task);
+            optionsContainer.appendChild(btn);
+        });
+        
+        area.classList.remove('hidden');
+        area.classList.add('fade-in');
+    }
+
+    function handleServiceSelection(service, pillar, task) {
+        if (service.correctFor === task.id) {
+            updateScore(25);
+            completeMappingTask(task, service.name, pillar);
+        } else {
+            updateScore(-10);
+            showToast('Incorrect service for this requirement. Try again.', 'error');
+        }
+    }
+
+    function completeMappingTask(task, serviceName, pillarDef) {
+        task.solved = true;
+            state.activeMappingTask = null;
+            state.mappedRequirements++;
+            
+            // Update UI for task
+            const taskEl = document.getElementById(`task-${task.id}`);
+            taskEl.classList.remove('ring-2', 'ring-aws-orange', 'bg-orange-50', 'hover:border-aws-orange', 'cursor-pointer');
+            taskEl.classList.add('bg-green-50', 'border-green-200', 'opacity-70');
+            const icon = document.getElementById(`icon-${task.id}`);
+            icon.classList.replace('text-gray-300', 'text-green-500');
+            
+            // Add solution text
+            const solDiv = document.createElement('div');
+            solDiv.className = 'mt-2 text-xs bg-green-100 p-1.5 rounded text-green-800 border border-green-200';
+            solDiv.innerHTML = `<strong>Mapped:</strong> ${pillarDef.name} &rarr; ${serviceName}`;
+            taskEl.appendChild(solDiv);
+
+            document.getElementById('service-selection-area').classList.add('hidden');
+            document.getElementById('arch-progress-text').innerText = `Mappings: ${state.mappedRequirements}/${coreTasks.length} completed`;
+            
+            showToast(`Architecture mapped successfully!`, 'success');
+
+            if (state.mappedRequirements === coreTasks.length) {
+                document.getElementById('btn-proceed-deployment').classList.remove('hidden');
+                document.getElementById('btn-proceed-deployment').classList.add('fade-in');
+            }
+        }
+
+        document.getElementById('btn-proceed-deployment').addEventListener('click', () => {
+            switchPhase(4);
+        });
+
+        function initPhase4() {
+            renderCommandOptions();
+        }
+
+        function renderCommandOptions() {
+            const container = document.getElementById('cmd-options');
+            container.innerHTML = '';
+            
+            // Mix correct commands with distractors
+            const cmds = [
+                { id: 0, text: "aws cloudformation deploy --template-file vpc-sec.yaml...", isCorrect: true },
+                { id: 1, text: "aws s3 mb s3://my-logs-bucket", isCorrect: false },
+                { id: 2, text: "aws autoscaling create-auto-scaling-group --min-size 2...", isCorrect: true },
+                { id: 3, text: "aws ec2 run-instances --image-id ami-12345", isCorrect: false },
+                { id: 4, text: "aws codepipeline create-pipeline...", isCorrect: true },
+                { id: 5, text: "aws budgets create-budget --account-id 123456...", isCorrect: true }
+            ];
+
+            // Shuffle loosely (simplified for code length)
+            cmds.sort(() => Math.random() - 0.5);
+
+            cmds.forEach(cmdData => {
+                const btn = document.createElement('button');
+                btn.className = 'bg-gray-100 hover:bg-gray-200 border border-gray-300 text-gray-700 py-1.5 px-3 rounded text-left truncate max-w-full font-mono transition-colors';
+                btn.title = cmdData.text; // Tooltip for full text
+                // Trim for UI
+                let displayText = cmdData.text.substring(0, 40);
+                if(cmdData.text.length > 40) displayText += '...';
+                
+                btn.innerText = displayText;
+                btn.onclick = () => handleCommandSelection(cmdData);
+                container.appendChild(btn);
+            });
+        }
+
+        async function handleCommandSelection(cmdData) {
+            const expectedStepIndex = state.deploymentStep;
+            if (expectedStepIndex >= deploymentSteps.length) return;
+
+            const expectedCmdBase = deploymentSteps[expectedStepIndex].cmd.split(' ')[1]; // roughly check resource (cloudformation, autoscaling, codepipeline)
+            const selectedCmdBase = cmdData.text.split(' ')[1];
+
+            if (cmdData.isCorrect && expectedCmdBase === selectedCmdBase) {
+                // Correct command in sequence
+                const fullCmd = deploymentSteps[expectedStepIndex].cmd;
+                const desc = deploymentSteps[expectedStepIndex].desc;
+                
+                updateScore(50);
+                await simulateTerminalExecution(fullCmd, desc, expectedStepIndex);
+                
+                state.deploymentStep++;
+                
+                // Update task list UI
+                const taskItems = document.getElementById('deployment-tasks').querySelectorAll('li');
+                if (taskItems[expectedStepIndex]) {
+                    const icon = taskItems[expectedStepIndex].querySelector('i');
+                    icon.classList.replace('far', 'fas');
+                    icon.classList.replace('fa-circle', 'fa-check-circle');
+                    icon.classList.replace('text-gray-400', 'text-green-500');
+                    taskItems[expectedStepIndex].classList.add('font-medium', 'text-gray-900');
+                }
+
+                if (state.deploymentStep === deploymentSteps.length) {
+                    document.getElementById('btn-finish').classList.remove('hidden');
+                    document.getElementById('btn-finish').classList.add('fade-in');
+                    showToast('All infrastructure provisioned successfully!', 'success');
+                }
+
+            } else {
+                updateScore(-10);
+                if (!cmdData.isCorrect) {
+                     showToast("That command isn't needed for our core requirements right now.", 'error');
+                } else {
+                     showToast(`Please execute tasks in order. Expected: Task ${expectedStepIndex + 1}`, 'warning');
+                }
+            }
+        }
+
+        async function simulateTerminalExecution(cmd, description, stepIndex) {
+            const typingSpan = document.getElementById('current-typing');
+            
+            // 1. Type out command
+            for (let i = 0; i < cmd.length; i++) {
+                typingSpan.textContent += cmd.charAt(i);
+                await new Promise(r => setTimeout(r, 20)); // typing speed
+            }
+            
+            await new Promise(r => setTimeout(r, 200)); // Pause before execution
+
+            // 2. Move current line up and reset input line
+            const outputContainer = document.getElementById('terminal-output');
+            const activeLine = document.getElementById('active-terminal-line');
+            
+            const executedLine = document.createElement('div');
+            executedLine.className = 'mb-2';
+            executedLine.innerHTML = `<span class="text-green-500 mr-2">devops@aws:~$</span><span class="text-white">${cmd}</span>`;
+            outputContainer.insertBefore(executedLine, activeLine);
+            
+            typingSpan.textContent = ''; // Clear typing area
+            activeLine.classList.add('hidden'); // Hide prompt temporarily
+
+            // 3. Show processing logs
+            const logLine = document.createElement('div');
+            logLine.className = 'text-yellow-400 mb-2 italic ml-4';
+            logLine.innerText = `> Executing: ${description}`;
+            outputContainer.insertBefore(logLine, activeLine);
+            
+            outputContainer.scrollTop = outputContainer.scrollHeight;
+
+            // Simulate delay
+            await new Promise(r => setTimeout(r, deploymentSteps[stepIndex].time));
+
+            // 4. Show Success
+            const successLine = document.createElement('div');
+            successLine.className = 'text-gray-300 mb-4 ml-4';
+            
+            let successDetails = "";
+            if(stepIndex === 0) successDetails = "VPC 'GlobalMart-Net' created. Security Groups configured with least privilege.";
+            if(stepIndex === 1) successDetails = "ASG 'WebASG' created. Desired capacity: 2, Max: 10 across multi-AZ.";
+            if(stepIndex === 2) successDetails = "Pipeline deployed. Triggers mapped to main branch. Zero-downtime enabled.";
+            if(stepIndex === 3) successDetails = "AWS Budget configured. Alert thresholds set for 80% and 100% of target spend.";
+
+            successLine.innerHTML = `[SUCCESS] <span class="text-green-400">Resource provisioned.</span><br/>${successDetails}`;
+            outputContainer.insertBefore(successLine, activeLine);
+
+            activeLine.classList.remove('hidden'); // Show prompt again
+            outputContainer.scrollTop = outputContainer.scrollHeight;
+        }
+
+        document.getElementById('btn-finish').addEventListener('click', () => {
+            document.getElementById('final-score').innerText = state.score;
+            document.getElementById('modal-result').classList.remove('hidden');
+            
+            // Simple confetti effect (using DOM elements for simplicity without external libs)
+            for(let i=0; i<50; i++) {
+                createConfetti();
+            }
+        });
+
+        function createConfetti() {
+            const colors = ['#FF9900', '#232F3E', '#10b981', '#3b82f6'];
+            const el = document.createElement('div');
+            el.style.position = 'absolute';
+            el.style.width = '10px';
+            el.style.height = '10px';
+            el.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+            el.style.left = Math.random() * 100 + '%';
+            el.style.top = '-10px';
+            el.style.zIndex = '60';
+            el.style.transform = `rotate(${Math.random() * 360}deg)`;
+            
+            document.getElementById('modal-result').appendChild(el);
+            
+            // Animation
+            const duration = Math.random() * 3000 + 2000;
+            el.animate([
+                { transform: `translate3d(0,0,0) rotate(0)`, opacity: 1 },
+                { transform: `translate3d(${Math.random()*200 - 100}px, ${window.innerHeight}px, 0) rotate(${Math.random()*720}deg)`, opacity: 0 }
+            ], {
+                duration: duration,
+                easing: 'cubic-bezier(.37,0,.63,1)'
+            });
+            
+            setTimeout(() => el.remove(), duration);
+        }
+
+        // Initialize App
+        window.onload = () => {
+            // Slight delay for visual entry
+            setTimeout(() => {
+                document.getElementById('msg-2').classList.remove('hidden'); // Hide initially via HTML, then remove class
+                document.getElementById('msg-2').classList.add('hidden'); // Reset to ensure flow
+            }, 100);
+        };
+    </script>
+</body>
+</html>
