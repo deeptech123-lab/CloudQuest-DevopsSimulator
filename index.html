@@ -141,6 +141,7 @@
                 <span class="px-3 py-1 rounded-full bg-gray-700 text-gray-300 text-xs md:text-sm hidden md:inline-block" id="nav-step-2"><i class="fas fa-sync mr-1"></i> SDLC</span>
                 <span class="px-3 py-1 rounded-full bg-gray-700 text-gray-300 text-xs md:text-sm" id="nav-step-3"><i class="fas fa-sitemap mr-1"></i> Arch</span>
                 <span class="px-3 py-1 rounded-full bg-gray-700 text-gray-300 text-xs md:text-sm" id="nav-step-4"><i class="fas fa-terminal mr-1"></i> Deploy</span>
+                <span class="px-3 py-1 rounded-full bg-gray-700 text-gray-300 text-xs md:text-sm hidden md:inline-block" id="nav-step-5"><i class="fas fa-briefcase mr-1"></i> Career</span>
             </div>
             <div class="border-l border-gray-600 pl-4">
                 Score: <span id="score-display" class="text-aws-orange font-bold text-lg">0</span> / 400
@@ -378,6 +379,102 @@
             </div>
         </section>
 
+        <section id="phase5" class="max-w-6xl mx-auto h-full hidden flex-col fade-in">
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-8 flex-1 flex flex-col overflow-y-auto">
+                <div class="mb-6 pb-4 border-b border-gray-100 flex items-center justify-between">
+                    <div>
+                        <h2 class="text-3xl font-bold text-gray-800"><i class="fas fa-briefcase text-blue-600 mr-3"></i> A Day in the Life of a Cloud DevOps Engineer</h2>
+                        <p class="text-gray-500 mt-2 text-lg">Beyond this simulator, here is what a real-world Cloud DevOps Engineer tackles daily.</p>
+                    </div>
+                    <span class="bg-blue-100 text-blue-800 text-sm font-semibold px-3 py-1 rounded border border-blue-400">Career Info</span>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8 flex-1 content-start">
+                    <!-- CI/CD -->
+                    <div class="bg-blue-50 p-5 rounded-lg border border-blue-100 shadow-sm hover:shadow-md transition-shadow">
+                        <div class="flex items-center mb-3">
+                            <div class="bg-blue-500 text-white p-2 rounded-full h-10 w-10 flex items-center justify-center mr-3"><i class="fas fa-code-branch"></i></div>
+                            <h4 class="font-bold text-blue-900 text-lg">CI/CD & Automation</h4>
+                        </div>
+                        <ul class="text-sm text-gray-700 space-y-2 list-disc list-inside">
+                            <li>Building Jenkins, GitLab, or GitHub Actions pipelines.</li>
+                            <li>Automating unit, integration, and security tests.</li>
+                            <li>Managing zero-downtime deployments (Blue/Green, Canary).</li>
+                        </ul>
+                    </div>
+                    
+                    <!-- IaC -->
+                    <div class="bg-purple-50 p-5 rounded-lg border border-purple-100 shadow-sm hover:shadow-md transition-shadow">
+                        <div class="flex items-center mb-3">
+                            <div class="bg-purple-500 text-white p-2 rounded-full h-10 w-10 flex items-center justify-center mr-3"><i class="fas fa-cubes"></i></div>
+                            <h4 class="font-bold text-purple-900 text-lg">Infrastructure as Code</h4>
+                        </div>
+                        <ul class="text-sm text-gray-700 space-y-2 list-disc list-inside">
+                            <li>Writing and maintaining Terraform modules or CloudFormation.</li>
+                            <li>Managing infrastructure state and drift detection.</li>
+                            <li>Provisioning scalable Dev, QA, and Prod environments.</li>
+                        </ul>
+                    </div>
+                    
+                    <!-- Monitoring -->
+                    <div class="bg-green-50 p-5 rounded-lg border border-green-100 shadow-sm hover:shadow-md transition-shadow">
+                        <div class="flex items-center mb-3">
+                            <div class="bg-green-500 text-white p-2 rounded-full h-10 w-10 flex items-center justify-center mr-3"><i class="fas fa-chart-line"></i></div>
+                            <h4 class="font-bold text-green-900 text-lg">Monitoring & Observability</h4>
+                        </div>
+                        <ul class="text-sm text-gray-700 space-y-2 list-disc list-inside">
+                            <li>Creating dashboards in Grafana, Datadog, or CloudWatch.</li>
+                            <li>Configuring real-time alerts for system degradation.</li>
+                            <li>Analyzing centralized logs to troubleshoot production incidents.</li>
+                        </ul>
+                    </div>
+                    
+                    <!-- DevSecOps -->
+                    <div class="bg-red-50 p-5 rounded-lg border border-red-100 shadow-sm hover:shadow-md transition-shadow">
+                        <div class="flex items-center mb-3">
+                            <div class="bg-red-500 text-white p-2 rounded-full h-10 w-10 flex items-center justify-center mr-3"><i class="fas fa-shield-alt"></i></div>
+                            <h4 class="font-bold text-red-900 text-lg">DevSecOps & Security</h4>
+                        </div>
+                        <ul class="text-sm text-gray-700 space-y-2 list-disc list-inside">
+                            <li>Integrating security scans (SAST/DAST) into workflows.</li>
+                            <li>Managing IAM roles, policies, and secrets (AWS Secrets Manager).</li>
+                            <li>Ensuring compliance (SOC2, HIPAA) through automated audits.</li>
+                        </ul>
+                    </div>
+
+                    <!-- FinOps -->
+                    <div class="bg-yellow-50 p-5 rounded-lg border border-yellow-100 shadow-sm hover:shadow-md transition-shadow">
+                        <div class="flex items-center mb-3">
+                            <div class="bg-yellow-500 text-white p-2 rounded-full h-10 w-10 flex items-center justify-center mr-3"><i class="fas fa-coins"></i></div>
+                            <h4 class="font-bold text-yellow-900 text-lg">FinOps & Cost Tuning</h4>
+                        </div>
+                        <ul class="text-sm text-gray-700 space-y-2 list-disc list-inside">
+                            <li>Identifying idle resources and right-sizing instances.</li>
+                            <li>Setting up AWS Budgets, Cost Anomaly Detection.</li>
+                            <li>Purchasing Savings Plans and Spot Instances.</li>
+                        </ul>
+                    </div>
+
+                    <!-- Incident Management -->
+                    <div class="bg-indigo-50 p-5 rounded-lg border border-indigo-100 shadow-sm hover:shadow-md transition-shadow">
+                        <div class="flex items-center mb-3">
+                            <div class="bg-indigo-500 text-white p-2 rounded-full h-10 w-10 flex items-center justify-center mr-3"><i class="fas fa-headset"></i></div>
+                            <h4 class="font-bold text-indigo-900 text-lg">Incident Management</h4>
+                        </div>
+                        <ul class="text-sm text-gray-700 space-y-2 list-disc list-inside">
+                            <li>Participating in on-call rotations (PagerDuty, Opsgenie).</li>
+                            <li>Leading blameless post-mortems after outages.</li>
+                            <li>Writing runbooks and automating recovery processes.</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="mt-auto flex justify-center pt-6 border-t border-gray-200">
+                    <button onclick="location.reload()" class="bg-aws-navy hover:bg-aws-hover text-white font-bold py-3 px-10 rounded shadow-lg transition-transform transform hover:scale-105 text-lg"><i class="fas fa-redo mr-2"></i> Play Again</button>
+                </div>
+            </div>
+        </section>
+
         <!-- Hint Modal -->
         <div id="modal-hint" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center p-4">
             <div class="bg-white rounded-lg max-w-2xl w-full shadow-2xl p-6 border-t-4 border-aws-orange">
@@ -419,19 +516,19 @@
 
         <!-- Result Modal -->
         <div id="modal-result" class="fixed inset-0 bg-black bg-opacity-75 z-50 hidden flex items-center justify-center p-4 backdrop-blur-sm">
-            <div class="bg-white rounded-lg max-w-lg w-full shadow-2xl p-8 text-center relative overflow-hidden">
+            <div class="bg-white rounded-lg max-w-2xl w-full shadow-2xl p-8 text-center relative overflow-hidden flex flex-col max-h-[90vh]">
                 <div class="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-aws-orange via-yellow-400 to-green-500"></div>
                 <i class="fas fa-award text-6xl text-aws-orange mb-4"></i>
                 <h2 class="text-3xl font-bold text-gray-800 mb-2">Mission Accomplished!</h2>
                 <p class="text-gray-600 mb-6">You have successfully architected and deployed GlobalMart using AWS best practices.</p>
                 
-                <div class="bg-gray-100 rounded-lg p-4 mb-6">
+                <div class="bg-gray-100 rounded-lg p-4 mb-6 shrink-0">
                     <div class="text-sm text-gray-500 uppercase font-semibold tracking-wide">Final Score</div>
                     <div class="text-5xl font-bold text-aws-navy" id="final-score">400</div>
                     <div class="text-sm text-green-600 font-medium mt-2"><i class="fas fa-check-circle"></i> AWS Certified DevOps Pro Level</div>
                 </div>
-                
-                <button onclick="location.reload()" class="bg-aws-navy hover:bg-aws-hover text-white font-bold py-3 px-8 rounded-full shadow-lg transition-transform transform hover:scale-105 w-full">Play Again</button>
+
+                <button onclick="goToPhase5()" class="bg-aws-navy hover:bg-aws-hover text-white font-bold py-3 px-8 rounded-full shadow-lg transition-transform transform hover:scale-105 w-full shrink-0">Explore: Day in the Life <i class="fas fa-arrow-right ml-2"></i></button>
             </div>
         </div>
 
@@ -565,14 +662,18 @@
 
         function switchPhase(newPhase) {
             document.getElementById(`phase${state.phase}`).classList.add('hidden');
-            document.getElementById(`nav-step-${state.phase}`).classList.replace('bg-aws-orange', 'bg-gray-700');
-            document.getElementById(`nav-step-${state.phase}`).classList.replace('text-aws-navy', 'text-gray-300');
+            if (document.getElementById(`nav-step-${state.phase}`)) {
+                document.getElementById(`nav-step-${state.phase}`).classList.replace('bg-aws-orange', 'bg-gray-700');
+                document.getElementById(`nav-step-${state.phase}`).classList.replace('text-aws-navy', 'text-gray-300');
+            }
             
             state.phase = newPhase;
             
             document.getElementById(`phase${state.phase}`).classList.remove('hidden');
-            document.getElementById(`nav-step-${state.phase}`).classList.replace('bg-gray-700', 'bg-aws-orange');
-            document.getElementById(`nav-step-${state.phase}`).classList.replace('text-gray-300', 'text-aws-navy');
+            if (document.getElementById(`nav-step-${state.phase}`)) {
+                document.getElementById(`nav-step-${state.phase}`).classList.replace('bg-gray-700', 'bg-aws-orange');
+                document.getElementById(`nav-step-${state.phase}`).classList.replace('text-gray-300', 'text-aws-navy');
+            }
 
             if(newPhase === 3) initPhase3();
             if(newPhase === 4) initPhase4();
@@ -1037,6 +1138,11 @@
             });
             
             setTimeout(() => el.remove(), duration);
+        }
+
+        function goToPhase5() {
+            document.getElementById('modal-result').classList.add('hidden');
+            switchPhase(5);
         }
 
         // Initialize App
